@@ -1,0 +1,314 @@
+<template>
+  <transition name="food-detail">
+    <div class="food" v-show="showFlag" ref="foodView">
+      <div class="food-wrapper">
+        <!-- 详情页头部结构（除了评论区域） -->
+        <div class="food-content">
+          <div class="img-wrapper">
+            <img :src="food.picture" class="food-img" />
+            <span class="close-bt icon-close" @click="closeView"></span>
+            <img src="./img/share.png" class="share-bt" />
+            <img src="./img/more.png" class="more-bt" />
+          </div>
+          <div class="content-wrapper">
+            <h3 class="name">{{food.name}}</h3>
+            <p class="saled">{{food.month_saled_content}}</p>
+            <img
+              :src="food.product_label_picture"
+              class="product"
+              v-show="food.product_label_picture"
+            />
+            <p class="price">
+              <span class="text">￥{{food.min_price}}</span>
+              <span class="unit">/{{food.unit}}</span>
+            </p>
+            <!-- 加减号组件 -->
+            <div class="cartcontrol-wrapper">
+              <app-cart-control :food="food"></app-cart-control>
+            </div>
+            <div class="buy" v-show="!food.count || food.count==0" @click="addProduct">选规格</div>
+          </div>
+        </div>
+        <app-split></app-split>
+        <!-- 外卖评价 ps:vue接口取值，不能超过2级 如果要取 需要做判断对象中有内容 用v-if做判断-->
+        <div class="rating-wrapper">
+          <div class="rating-title">
+            <div class="like-ratio" v-if="food.rating">
+              <span class="title">{{food.rating.title}}</span>
+              <span class="ratio">
+                (
+                {{food.rating.like_ratio_desc}}
+                <i>{{food.rating.like_ratio}}</i>
+                )
+              </span>
+            </div>
+            <div class="snd-title" v-if="food.rating">
+              <span class="text">{{food.rating.snd_title}}</span>
+            </div>
+          </div>
+          <ul class="rating-content" v-if="food.rating">
+            <li
+              v-for="(comment,index) in food.rating.comment_list"
+              :key="index"
+              class="comment-item"
+            >
+              <div class="comment-header">
+                <img :src="comment.user_icon" v-if="comment.user_icon" />
+                <img src="./img/anonymity.png" v-if="!comment.user_icon" />
+              </div>
+              <div class="comment-main">
+                <div class="user">{{comment.user_name}}</div>
+                <div class="time">{{comment.comment_time}}</div>
+                <div class="content">{{comment.comment_content}}</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </transition>
+</template>
+<script>
+import Vue from "vue";
+import Cartcontrol from "../cartcontrol/Cartcontrol";
+import BScroll from "better-scroll";
+import Split from "../split/Split";
+export default {
+  data() {
+    return {
+      showFlag: false
+    };
+  },
+  props: {
+    food: {
+      type: Object
+    }
+  },
+  methods: {
+    //通过父级调用方法
+    showView() {
+      this.showFlag = true;
+      //一进入页面就better-scroll初始化
+      this.$nextTick(() => {
+        if (!this.scroll) {
+          //如果this.scroll没有那就初始一个
+          this.scroll = new BScroll(this.$refs.foodView, {
+            click: true
+          });
+        } else {
+          this.scroll.refresh();
+        }
+      });
+    },
+    closeView() {
+      this.showFlag = false;
+    },
+    addProduct() {
+      //点击选规格 这里的food中没有coun的值 所以要用全局的Vue.set的方法添加count属性
+      // this.food.count = 1;
+      Vue.set(this.food, "count", 1);
+    }
+  },
+  components: {
+    "app-cart-control": Cartcontrol,
+    "app-split": Split
+  }
+};
+</script>
+<style scoped>
+@import url("../../../static/css/reset.css");
+.food {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 51px;
+  background: white;
+  width: 100%;
+  z-index: 90;
+}
+
+.food-detail-enter-active,
+.food-detail-leave-active {
+  transition: 1s;
+}
+.food-detail-enter,
+.food-detail-leave-to {
+  transform: translateX(100%);
+}
+
+/* .food .food-wrapper .food-content {
+} */
+
+.food .food-wrapper .food-content .img-wrapper {
+  position: relative;
+  width: 100%;
+  /* 根据当前的高度进行撑高 */
+  height: 0;
+  padding-top: 100%;
+}
+
+.food .food-wrapper .food-content .img-wrapper .food-img {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.food .food-wrapper .food-content .img-wrapper .food-img {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+.food .food-wrapper .food-content .img-wrapper .close-bt {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  text-align: center;
+  font-size: 30px;
+  color: white;
+  background: #7f7f7f;
+  border-radius: 50%;
+}
+.food .food-wrapper .food-content .img-wrapper .share-bt,
+.food .food-wrapper .food-content .img-wrapper .more-bt {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  top: 10px;
+}
+.food .food-wrapper .food-content .img-wrapper .share-bt {
+  right: 50px;
+}
+.food .food-wrapper .food-content .img-wrapper .more-bt {
+  right: 10px;
+}
+
+.food .food-wrapper .food-content .content-wrapper {
+  padding: 0 0 16px 16px;
+  position: relative;
+}
+.food .food-wrapper .food-content .content-wrapper .name {
+  font-size: 15px;
+  color: #333333;
+  line-height: 30px;
+  font-weight: bold;
+}
+.food .food-wrapper .food-content .content-wrapper .saled {
+  font-size: 11px;
+  color: #9d9d9d;
+  margin-bottom: 6px;
+}
+.food .food-wrapper .food-content .content-wrapper .product {
+  height: 15px;
+  margin-bottom: 16px;
+}
+.food .food-wrapper .food-content .content-wrapper .price {
+  font-size: 0;
+}
+.food .food-wrapper .food-content .content-wrapper .price .text {
+  font-size: 17px;
+  color: #fb4e44;
+}
+.food .food-wrapper .food-content .content-wrapper .price .unit {
+  font-size: 11px;
+  color: #9d9d9d;
+}
+.food .food-wrapper .food-content .cartcontrol-wrapper {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  padding: 2px;
+}
+.food .food-wrapper .food-content .buy {
+  width: 64px;
+  height: 30px;
+  font-size: 12px;
+  line-height: 30px;
+  text-align: center;
+  background: #ffd161;
+  border-radius: 30px;
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+}
+
+.food .food-wrapper .rating-wrapper {
+  padding-left: 16px;
+}
+.food .food-wrapper .rating-wrapper .rating-title {
+  padding: 16px 16px 16px 0;
+}
+.food .food-wrapper .rating-wrapper .rating-title .like-ratio {
+  float: left;
+  font-size: 0;
+}
+.food .food-wrapper .rating-wrapper .rating-title .like-ratio .title {
+  font-size: 13px;
+}
+.food .food-wrapper .rating-wrapper .rating-title .like-ratio .ratio {
+  font-size: 11px;
+}
+.food .food-wrapper .rating-wrapper .rating-title .like-ratio .ratio i {
+  color: #fb4e44;
+  font-size: 11px;
+}
+
+.food .food-wrapper .rating-wrapper .rating-title .snd-title {
+  float: right;
+  font-size: 0;
+}
+.food .food-wrapper .rating-wrapper .rating-title .snd-title .text,
+.food .food-wrapper .rating-wrapper .rating-title .snd-title .icon {
+  font-size: 13px;
+  color: #9d9d9d;
+  display: inline-block;
+}
+.food .food-wrapper .rating-wrapper .rating-title .snd-title .icon {
+  margin-left: 12px;
+}
+
+.food .food-wrapper .rating-wrapper .comment-item {
+  padding: 15px 14px 17px 0;
+  border-bottom: 1px solid #f4f4f4;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+}
+.food .food-wrapper .rating-wrapper .comment-item .comment-header {
+  flex: 0 0 41px;
+  margin-right: 10px;
+}
+.food .food-wrapper .rating-wrapper .comment-item .comment-header img {
+  width: 41px;
+  height: 41px;
+  border-radius: 50%;
+}
+
+.food .food-wrapper .rating-wrapper .comment-item .comment-main {
+  flex: 1;
+  margin-top: 6px;
+}
+.food .food-wrapper .rating-wrapper .comment-item .comment-main .user {
+  width: 50%;
+  float: left;
+  font-size: 12px;
+  color: #333333;
+}
+.food .food-wrapper .rating-wrapper .comment-item .comment-main .time {
+  width: 50%;
+  float: right;
+  text-align: right;
+  font-size: 10px;
+  color: #666666;
+}
+.food .food-wrapper .rating-wrapper .comment-item .comment-main .content {
+  margin-top: 17px;
+  font-size: 13px;
+  line-height: 19px;
+}
+</style>
